@@ -242,7 +242,21 @@ $(function() {
 
     function(chart) {
 
+          var xmlhttp = new XMLHttpRequest();
+          var urltemp = "http://api.thingspeak.com/channels/75529/field/4.json";
+          xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+              var myArr = JSON.parse(xmlhttp.responseText);
+              console.log("opened");
+              currentTemp = myArr["feeds"][99]["field4"];
+              console.log(myArr["feeds"][99]["field4"]);
+              var point = chart.series[0].points[0];
+              point.update(Math.floor(currentTemp) + 1);
 
+            }
+          };
+          xmlhttp.open("GET", urltemp, true);
+          xmlhttp.send();
 
 
       if (!chart.renderer.forExport) {
@@ -263,23 +277,36 @@ $(function() {
           xmlhttp.open("GET", urltemp, true);
           xmlhttp.send();
 
-
-          var chart2 = $('#container-humidity').highcharts(),
+ var chart2 = $('#container-humidity').highcharts(),
             point,
             newVal,
             inc;
 
+
+         
+
           if (chart2) {
             point2 = chart2.series[0].points[0];
-            inc = Math.round((Math.random() - 0.5) * 100);
-            newVal = point2.y + inc;
-            console.log(newVal);
+           // inc = Math.round((Math.random() - 0.5) * 100);
+           // newVal = point2.y + inc;
+           var xmlhttphum = new XMLHttpRequest();
+          var urlhum = "http://api.thingspeak.com/channels/75529/field/2.json";
+          xmlhttphum.onreadystatechange = function() {
+            if (xmlhttphum.readyState == 4 && xmlhttp.status == 200) {
+              var myArrhum = JSON.parse(xmlhttphum.responseText);
+              console.log("opened hum");
+              currentHum = myArrhum["feeds"][99]["field2"];
+              console.log(myArrhum["feeds"][99]["field2"]);
+              newVal = (Math.floor(myArrhum["feeds"][99]["field2"]));
+             // var point = chart.series[0].points[0];
+              point2.update(Math.floor(newVal) + 1);
 
-            if (newVal < 0 || newVal > 100) {
-              newVal = point2.y - inc;
             }
+          };
+          xmlhttphum.open("GET", urlhum, true);
+          xmlhttphum.send();
 
-            point2.update(newVal);
+            
           }
 
 
@@ -296,7 +323,7 @@ $(function() {
 </head>
 
 <body>
-<script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
