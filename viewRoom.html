@@ -270,7 +270,7 @@ $(function() {
               currentTemp = myArr["feeds"][99]["field4"];
               console.log(myArr["feeds"][99]["field4"]);
               var point = chart.series[0].points[0];
-              point.update(Math.floor(currentTemp) + 1);
+              point.update(Math.round(currentTemp));
 
             }
           };
@@ -297,9 +297,9 @@ $(function() {
               console.log("opened hum");
               currentHum = myArrhum["feeds"][99]["field2"];
               console.log(myArrhum["feeds"][99]["field2"]);
-              newVal = (Math.floor(myArrhum["feeds"][99]["field2"]));
+              newVal = (Math.round(myArrhum["feeds"][99]["field2"]));
              // var point = chart.series[0].points[0];
-              point2.update(Math.floor(newVal) + 1);
+              point2.update(Math.round(newVal));
 
             }
           };
