@@ -29,14 +29,36 @@ Create a Facebook App for your domain (https://developer.facebook.com) and then 
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "graph.facebook.com:app_id": "yourfacebookappid",
-          "graph.facebook.com:id": "yourfacebookid"
+          "graph.facebook.com:app_id": "yourfacebookappid"
         }
       }
     }
   ]
 }
 ```
-
+and then attach a policy similar to below
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1452716268000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "graph.facebook.com:id": "yourfacebookid"
+                }
+            },
+            "Resource": [
+                "arn:aws:s3:::yourbucketaddress/destemp"
+            ]
+        }
+    ]
+}
+```
 
 
