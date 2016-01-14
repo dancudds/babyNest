@@ -1,4 +1,9 @@
 
+
+
+
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,16 +20,18 @@
 
   
 
-  <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
 
+<!--  <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
+
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="/resources/demos/external/jquery-mousewheel/jquery.mousewheel.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
   
 
   
 
   
-
-  
-    <link rel="stylesheet" type="text/css" href="/css/result-light.css">
+    <link rel="stylesheet" type="text/css" href="chui.css">
   
 
   
@@ -238,12 +245,13 @@ $(function() {
     },
 
     // Add some life
+    
 
 
     function(chart) {
 
           var xmlhttp = new XMLHttpRequest();
-          var urltemp = "http://api.thingspeak.com/channels/75529/field/4.json";
+          var urltemp = "http://api.thingspeak.com/channels/youchannel/field/4.json";
           xmlhttp.onreadystatechange = function() {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
               var myArr = JSON.parse(xmlhttp.responseText);
@@ -251,18 +259,50 @@ $(function() {
               currentTemp = myArr["feeds"][99]["field4"];
               console.log(myArr["feeds"][99]["field4"]);
               var point = chart.series[0].points[0];
-              point.update(Math.floor(currentTemp) + 1);
+              point.update(Math.round(currentTemp));
 
             }
           };
           xmlhttp.open("GET", urltemp, true);
           xmlhttp.send();
+          
+        var chart2 = $('#container-humidity').highcharts(),
+            point,
+            newVal,
+            inc;
+
+
+         
+
+          if (chart2) {
+            point2 = chart2.series[0].points[0];
+           // inc = Math.round((Math.random() - 0.5) * 100);
+           // newVal = point2.y + inc;
+           var xmlhttphum = new XMLHttpRequest();
+          var urlhum = "http://api.thingspeak.com/channels/youchannel/field/2.json";
+          xmlhttphum.onreadystatechange = function() {
+            if (xmlhttphum.readyState == 4 && xmlhttp.status == 200) {
+              var myArrhum = JSON.parse(xmlhttphum.responseText);
+              console.log("opened hum");
+              currentHum = myArrhum["feeds"][99]["field2"];
+              console.log(myArrhum["feeds"][99]["field2"]);
+              newVal = (Math.round(myArrhum["feeds"][99]["field2"]));
+             // var point = chart.series[0].points[0];
+              point2.update(Math.round(newVal));
+
+            }
+          };
+          xmlhttphum.open("GET", urlhum, true);
+          xmlhttphum.send();
+
+            
+          }   
 
 
       if (!chart.renderer.forExport) {
         setInterval(function() {
           var xmlhttp = new XMLHttpRequest();
-          var urltemp = "http://api.thingspeak.com/channels/75529/field/4.json";
+          var urltemp = "http://api.thingspeak.com/youchannel/75529/field/4.json";
           xmlhttp.onreadystatechange = function() {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
               var myArr = JSON.parse(xmlhttp.responseText);
@@ -290,7 +330,7 @@ $(function() {
            // inc = Math.round((Math.random() - 0.5) * 100);
            // newVal = point2.y + inc;
            var xmlhttphum = new XMLHttpRequest();
-          var urlhum = "http://api.thingspeak.com/channels/75529/field/2.json";
+          var urlhum = "http://api.thingspeak.com/channels/youchannel/field/2.json";
           xmlhttphum.onreadystatechange = function() {
             if (xmlhttphum.readyState == 4 && xmlhttp.status == 200) {
               var myArrhum = JSON.parse(xmlhttphum.responseText);
@@ -310,10 +350,12 @@ $(function() {
           }
 
 
-        }, 5000);
+        }, 60000);
       }
     });
 });
+
+
 
 //]]> 
 
@@ -323,6 +365,9 @@ $(function() {
 </head>
 
 <body>
+
+
+
   <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/highcharts-more.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
@@ -330,10 +375,116 @@ $(function() {
 
 <div id="container" style="min-width: 310px; max-width: 400px; height: 300px; margin: 0 auto"></div>
 <div style="width: 600px; height: 400px; margin: 0 auto">
+<center>
+<button id="login">Change desired temp</button>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.2.26.min.js"></script>
+<script type="text/javascript">
+
+
+var appId = '999'; // Change this for your Facebook app ID
+var roleArn = 'arn:aws:iam::999:role/yourRole'; // This is your AWS IAM role
+var AWSregion = 'us-west-2'; //change if you're not using Oregon region
+var myBucket = 'yourbucket'; //the S3 bucket
+
+window.fbAsyncInit = function() {
+  // init the FB JS SDK
+  FB.init({appId: appId});
+
+  document.getElementById('login').onclick = function() {
+    FB.login(function (response) {
+      if (response.authResponse) { // logged in
+      AWS.config.region = AWSregion;
+      
+        AWS.config.credentials = new AWS.WebIdentityCredentials({
+          RoleArn: roleArn,
+          ProviderId: 'graph.facebook.com',
+          WebIdentityToken: response.authResponse.accessToken
+        });
+ console.log(AWS.config.credentials);
+ console.log(response.authResponse.userID);
+FBuserID = response.authResponse.userID
+epochtime = Math.floor(new Date() / 1000);
+var chosentemp = $("#olympics").val();
+console.log(chosentemp);
+var dynamodb = new AWS.DynamoDB();
+
+params = {TableName: 'temps', Item: { /* required */
+    'time': { N: epochtime.toString()}, 'temp': {N: chosentemp}, 'userid': {S: FBuserID}}};
+dynamodb.putItem(params, function(err, data) {
+  if (err) console.log(err, err.stack); // an error occurred
+  else     console.log(data);           // successful response
+});
+
+if (chosentemp > 50 && chosentemp < 90)
+{
+console.log ("Good temp");
+var s3 = new AWS.S3();
+ params = {
+  Bucket: myBucket, /* required */
+  Key: 'destemp', /* required */
+  Body: chosentemp, //the temp 
+  Metadata: { 'userID': FBuserID},
+  ACL: 'public-read'
+  }
+  ;
+  s3.putObject(params, function(err, data) {
+  if (err) 
+  {console.log(err, err.stack);
+  alert("Cannot update desired temp. You're likely not a valid Facebook user.");
+  } // an error occurred
+  else {    console.log(data);      
+  alert("Desired temperature updated.");
+  }     // successful response
+});
+}
+else
+{
+console.log ("Bad temp");
+alert("Come on! That temperature is just crazy.");
+}
+    
+    
+
+
+        console.log('You are now logged in.');
+      } else {
+        console.log('There was a problem logging you in.');
+      }
+    });
+  };
+};
+
+// Load the FB JS SDK asynchronously
+(function(d, s, id){
+   var js, fjs = d.getElementsByTagName(s)[0];
+   if (d.getElementById(id)) {return;}
+   js = d.createElement(s); js.id = id;
+   js.src = "http://connect.facebook.net/en_US/all.js";
+   fjs.parentNode.insertBefore(js, fjs);
+ }(document, 'script', 'facebook-jssdk'));
+</script>
+
+<label for="olympics">Desired temp:</label>
+<input id="olympics" type="number" value = "68">
+
+<script>
+	$.widget("tj.olympicspicker", $.ui.spinner, {
+		options: {
+			min: 50,
+			max: 90,
+			step: 1
+		}
+	});
+	$("input").olympicspicker();
+</script>
+</center>
   <div id="container-humidity" style="width: 300px; height: 200px; margin: 0 auto"></div>
   <div id="container2" style="min-width: 310px; max-width: 400px; height: 300px; margin: 0 auto">
-    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="http://api.thingspeak.com/channels/75529/charts/4?width=450&height=260&results=300&dynamic=true"></iframe>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="http://api.thingspeak.com/channels/youchannel/charts/4?width=450&height=260&results=300&dynamic=true"></iframe>
   </div>
+
+
+
 
   
 </body>
